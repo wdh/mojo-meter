@@ -160,9 +160,10 @@ Mojo::IOLoop->recurring( 1 => sub {
   });
   for my $url (@fetch) {
     my $end = $delay->begin(0);
+    my $start_time = time();
     $ua->get($url => sub {
       my ($ua, $tx) = @_;
-      $end->([$tx, time()]);
+      $end->([$tx, $start_time]);
     });
   }
   $delay->wait;
