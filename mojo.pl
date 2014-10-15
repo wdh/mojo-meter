@@ -155,7 +155,8 @@ Mojo::IOLoop->recurring( 1 => sub {
         print "RESPONSE: $start $end $duration " . $tx->res->code . " $url\n";
       }
       elsif( $tx->error ) {
-        print "ERROR: $start $end $duration " . $tx->res->code . " $url " . $tx->error->{message} . "\n";
+        my $res_code = defined $tx->res->code ? $tx->res->code : "UNDEF"
+        print "ERROR: $start $end $duration $res_code $url " . $tx->error->{message} . "\n";
       }
     }
   });
