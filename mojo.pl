@@ -22,6 +22,8 @@ my $usage = "
   --host (default = http://localhost/)
     Host to forward requests to. Specify multiple --host options to forward to
     multiple hosts on a round robin basis.
+  --path (default = /nitro/api)
+    Path that should be used.
   --key
     Nitro API key (outgoing requests will have api_key rewritten to this value).
   --lag=<N>
@@ -38,6 +40,7 @@ my $usage = "
 
 my $opt = {
   host => [],
+  path => '/nitro/api',
   key => 'abc123',
   lag => 0,
   maxrate => 200,
@@ -49,6 +52,7 @@ my $opt = {
 GetOptions(
   $opt,
   'host=s@',
+  'path=s',
   'key=s',
   'lag=i',
   'load=f',
@@ -77,6 +81,11 @@ $stream->on( read => sub {
     unless($path) {
       $skipped++;
       next;
+    }
+
+    # rewrite path if appropriate
+    if ($opt->{path} ne '/nitro/api') {
+      $path =~ s:/nitro/api:$opt->{path}:;
     }
 
     # rewrite api key in path
