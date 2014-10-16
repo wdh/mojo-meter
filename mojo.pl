@@ -99,6 +99,8 @@ $stream->on( read => sub {
 my $ua = Mojo::UserAgent->new;
 $ua->proxy->detect;
 $ua->cert($opt->{cert}) if $opt->{cert};
+$ua->request_timeout(0);
+$ua->inactivity_timeout(0);
 
 Mojo::IOLoop->recurring( 1 => sub {
   my $elapsed = time() - $start;
@@ -156,7 +158,7 @@ Mojo::IOLoop->recurring( 1 => sub {
         print "RESPONSE: $start $end $duration " . $tx->res->code . " $url\n";
       }
       elsif( $tx->error ) {
-        my $res_code = defined $tx->res->code ? $tx->res->code : "UNDEF"
+        my $res_code = defined $tx->res->code ? $tx->res->code : "UNDEF";
         print "ERROR: $start $end $duration $res_code $url " . $tx->error->{message} . "\n";
       }
     }
