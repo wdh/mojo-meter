@@ -16,6 +16,10 @@ $|=1;
 
 my $usage = "
 
+  cat <logfile> | $0 <options>
+
+  OR
+
   curl -s 'https://logs.forge.bbc.co.uk/tail/tail/live/service-app-live-app-logs/httpd-api-gw/access_log?lines=5' | $0 <options>
 
   <options>
