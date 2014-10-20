@@ -91,7 +91,6 @@ $stream->on( read => sub {
 
     # rewrite api key in path
     $path =~ s/api_key=([a-zA-Z0-9]+)/api_key=$opt->{key}/;
-    $path =~ s#/nitro/api/#/nitro-dev/api/#;
 
     my $url = $opt->{host}->[$host_n] . $path;
 
