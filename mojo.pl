@@ -1,5 +1,6 @@
 #!/usr/bin/env perl
 
+use v5.20.1;
 use strict;
 use warnings;
 
@@ -15,7 +16,7 @@ $|=1;
 
 my $usage = "
 
-  cat <logfile> | $0 <options>
+  curl -s 'https://logs.forge.bbc.co.uk/tail/tail/live/service-app-live-app-logs/httpd-api-gw/access_log?lines=5' | $0 <options>
 
   <options>
   
@@ -90,6 +91,7 @@ $stream->on( read => sub {
 
     # rewrite api key in path
     $path =~ s/api_key=([a-zA-Z0-9]+)/api_key=$opt->{key}/;
+    $path =~ s#/nitro/api/#/nitro-dev/api/#;
 
     my $url = $opt->{host}->[$host_n] . $path;
 
@@ -106,6 +108,8 @@ $stream->on( read => sub {
 my $ua = Mojo::UserAgent->new;
 $ua->proxy->detect;
 $ua->cert($opt->{cert}) if $opt->{cert};
+$ua->request_timeout(0);
+$ua->inactivity_timeout(0);
 
 Mojo::IOLoop->recurring( 1 => sub {
   my $elapsed = time() - $start;
@@ -160,10 +164,11 @@ Mojo::IOLoop->recurring( 1 => sub {
       $replayed++;
       my $url = $tx->req->url;
       if( $tx->res->code ) {
-#        print "$start $end $duration " . $tx->res->code . ' ' . $tx->req->url . "\n";
+        print "RESPONSE: $start $end $duration " . $tx->res->code . " $url\n";
       }
       elsif( $tx->error ) {
-#        print time() . " ERROR fetching $url: " . $tx->error->{message} . "\n";
+        my $res_code = defined $tx->res->code ? $tx->res->code : "UNDEF";
+        print "ERROR: $start $end $duration $res_code $url " . $tx->error->{message} . "\n";
       }
     }
   });
