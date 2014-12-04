@@ -6,6 +6,7 @@ use warnings;
 
 use Data::Dumper;
 use Getopt::Long;
+use Log::Log4perl;
 use Mojo;
 use Mojo::IOLoop;
 use Mojo::IOLoop::Stream;
@@ -42,6 +43,18 @@ my $usage = "
   --limit
     If defined, exit after this many requests have been replayed.
 ";
+
+my $level = $ENV{MOJO_METER_LOG_LEVEL} || 'INFO';
+
+Log::Log4perl->init(\qq{
+  log4perl.logger = $level,Screen
+  log4perl.appender.Screen=Log::Log4perl::Appender::ScreenColoredLevels
+  log4perl.appender.Screen.color.DEBUG=cyan
+  log4perl.appender.Screen.layout=Log::Log4perl::Layout::PatternLayout
+  log4perl.appender.Screen.layout.ConversionPattern=[%d] %p %P : %C ln %L: %m%n
+});
+
+my $log = Log::Log4perl::get_logger;
 
 my $opt = {
   host => [],
@@ -118,7 +131,7 @@ Mojo::IOLoop->recurring( 1 => sub {
   my $elapsed = time() - $start;
   my $rate_received = $elapsed ? sprintf( '%.2f', $received / $elapsed ) : 0;
   my $rate_replayed = $elapsed ? sprintf( '%.2f', $replayed / $elapsed ) : 0;
-  print sprintf(
+  $log->info( sprintf(
     "Elapsed: %s, Received: %s (%s/s), Skipped: %s, Replayed: %s (%s/s)",
     $elapsed,
     $received,
@@ -126,7 +139,7 @@ Mojo::IOLoop->recurring( 1 => sub {
     $skipped,
     $replayed,
     $rate_replayed
-  ) . "\n";
+  ) );
 });
 
 # make requests
@@ -167,11 +180,11 @@ Mojo::IOLoop->recurring( 1 => sub {
       $replayed++;
       my $url = $tx->req->url;
       if( $tx->res->code ) {
-        print "RESPONSE: $start $end $duration " . $tx->res->code . " $url\n";
+        $log->debug("RESPONSE: $start $end $duration " . $tx->res->code . " $url");
       }
       elsif( $tx->error ) {
         my $res_code = defined $tx->res->code ? $tx->res->code : "UNDEF";
-        print "ERROR: $start $end $duration $res_code $url " . $tx->error->{message} . "\n";
+        $log->error("ERROR: $start $end $duration $res_code $url " . $tx->error->{message});
       }
     }
   });
