@@ -95,7 +95,7 @@ $stream->on( read => sub {
   return unless @lines;
 
   for my $line (@lines) {
-    my( $path ) = ( $line =~ m{(/nitro/api/[^v1]\S+)} );
+    my( $path ) = ( $line !~ m{/nitro/api/v1/} && $line =~ m{(/nitro/api/\S+)} );
     unless($path) {
       $skipped++;
       next;
