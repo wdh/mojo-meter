@@ -42,6 +42,8 @@ my $usage = "
     Path to client certificate (.pem) to use when forwarding requests.
   --limit
     If defined, exit after this many requests have been replayed.
+  --timeout (default = 10)
+    Quit after this many seconds of inactivity on the input stream.
 ";
 
 my $level = $ENV{MOJO_METER_LOG_LEVEL} || 'INFO';
@@ -64,7 +66,8 @@ my $opt = {
   maxrate => 200,
   load => 1,
   cert => undef,
-  limit => undef
+  limit => undef,
+  timeout => 10
 };
 
 GetOptions(
@@ -77,6 +80,7 @@ GetOptions(
   'maxrate=i',
   'cert=s',
   'limit=i',
+  'timeout=i',
 ) or die $usage;
 $opt->{host} = ['http://localhost'] unless scalar(@{$opt->{host}});
 
@@ -88,6 +92,7 @@ my $skipped = 0;
 my $start = time();
 
 my $stream = Mojo::IOLoop::Stream->new(*STDIN);
+$stream->timeout($opt->{timeout});
 $stream->on( read => sub {
   my( $stream, $bytes ) = @_;
 
@@ -119,6 +124,9 @@ $stream->on( read => sub {
     $received++;
     Mojo::IOLoop->stop if $opt->{limit} && $received >= $opt->{limit};
   }
+});
+$stream->on( timeout => sub { 
+    $stream->close_gracefully(); 
 });
 
 my $ua = Mojo::UserAgent->new;
